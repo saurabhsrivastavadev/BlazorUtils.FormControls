@@ -1,0 +1,60 @@
+﻿<div>
+    @* List of selected values *@
+    @if (_selectedValues.Count > 0)
+    {
+        <div class="badge">
+            @_selectedValues.Count selected value/s. Click any value to remove.
+        </div>
+    }
+    <div class="mb-2" style="cursor:pointer;">
+        @foreach (var value in _selectedValues)
+        {
+            <div class="badge bg-info"
+                 @onclick="_ => _selectedValues.Remove(value)">
+                @value
+            </div>
+        }
+    </div>
+    @* Submit Button *@
+    @if (_selectedValues.Count > 0)
+    {
+        <div class="mb-2">
+            <button class="btn btn-secondary btn-sm"
+                    @onclick="SubmitSelectedValues">
+                @SubmitButtonText
+            </button>
+        </div>
+    }
+    @* Text input for the value *@
+    <input class="form-control"
+           type="text"
+           placeholder="@Placeholder"
+           @onkeyup="HandleKeyUp"
+           @bind="CurrentValue"
+           @bind:event="oninput" />
+    @* Suggest values matching above text input *@
+    <div>
+        @if (CurrentValue.Length > 1)
+        {
+            <div class="mt-2 mb-2 font-weight-bold">
+                @(_matchingSuggestions.Count) matches to your text. Click to select.
+            </div>
+            <div>
+                @foreach (var suggestion in _matchingSuggestions)
+                {
+                    <div class="alert alert-success"
+                         style="cursor: pointer;"
+                         @onclick="_ => _selectedValues.Add(suggestion)">
+                        @suggestion
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="mt-2 font-weight-bold">
+                Enter atleast 2 characters to start search..
+            </div>
+        }
+    </div>
+</div>
