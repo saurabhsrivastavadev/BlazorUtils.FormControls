@@ -44,7 +44,17 @@
                 {
                     <div class="alert alert-success"
                          style="cursor: pointer;"
-                         @onclick="_ => _selectedValues.Add(suggestion)">
+                         @onclick="_ => {
+                                       if (!_selectedValues.Contains(suggestion))
+                                       {
+                                           _selectedValues.Add(suggestion);
+                                       }
+                                       else
+                                       {
+                                           _selectedValues.Remove(suggestion);
+                                       }
+                                   }">
+                        <i class="@(_selectedValues.Contains(suggestion) ? "oi oi-check mr-2" : "")"></i>
                         @suggestion
                     </div>
                 }
