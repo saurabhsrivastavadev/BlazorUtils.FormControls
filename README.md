@@ -27,9 +27,12 @@ This project provides razor components which can be used in a Form.
     </div>
 ```
 
+### Components
+> Individual components are each in their own folder, with their corresponding README file.<br>
+> Please browse to the component folder which you are interested in.
+
 ### Demo Project
 Here's a project which uses BlazorUtils.FormControls library:<br>
-https://github.com/sobu86/TimeUtilities
+https://github.com/sobu86/TimeUtilities <br>
+It might not showcase all the available components, for which there is plan to have a demo site. 
 
-You can take a look at this commit specifically which utilizes the Typeahead component:<br>
-https://github.com/sobu86/TimeUtilities/commit/0ce056da990bcb56976fa77e5a673392d9edeb35

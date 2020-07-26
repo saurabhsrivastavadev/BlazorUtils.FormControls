@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Timers;
 
-namespace BlazorUtils.FormControls
+namespace BlazorUtils.FormControls.Typeahead
 {
     public partial class Typeahead
     {
