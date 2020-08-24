@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Timers;
 
 namespace BlazorUtils.FormControls.Typeahead
@@ -15,6 +16,9 @@ namespace BlazorUtils.FormControls.Typeahead
 
         [Parameter]
         public ISet<string> Suggestions { get; set; }
+
+        [Parameter]
+        public EventCallback<ISet<string>> SuggestionsChanged { get; set; }
 
         [Parameter]
         public bool AllowOnlySuggestedValues { get; set; } = true;
@@ -38,22 +42,22 @@ namespace BlazorUtils.FormControls.Typeahead
         private Timer _debounceTimer = new Timer(400);
         private ISet<string> _selectedValues = new HashSet<string>();
 
-        protected override void OnInitialized()
+        protected override Task OnInitializedAsync()
         {
-            base.OnInitialized();
-
             _debounceTimer.AutoReset = false;
             _debounceTimer.Elapsed += DebounceTimerCb;
+
+            return base.OnInitializedAsync();
         }
 
-        protected override void OnParametersSet()
+        protected override Task OnParametersSetAsync()
         {
-            base.OnParametersSet();
-
             if (Suggestions.Count == 0 && AllowOnlySuggestedValues)
             {
                 Logger.LogInformation("No suggestions in the typeahead component.");
             }
+
+            return base.OnParametersSetAsync();
         }
 
         private void HandleKeyUp(KeyboardEventArgs args)
