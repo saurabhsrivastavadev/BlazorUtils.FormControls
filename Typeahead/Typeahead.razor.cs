@@ -52,7 +52,7 @@ namespace BlazorUtils.FormControls.Typeahead
 
             if (Suggestions.Count == 0 && AllowOnlySuggestedValues)
             {
-                Logger.LogError("No suggestions in the typeahead component.");
+                Logger.LogInformation("No suggestions in the typeahead component.");
             }
         }
 
