@@ -1,5 +1,5 @@
 ﻿<div class="fixed z-8 inset-0 overflow-y-auto @Hidden">
-  <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+  <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
     <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
 
     <!-- For centering the modal dialog -->
@@ -7,13 +7,19 @@
 
     <div class="inline-block align-bottom bg-white rounded-lg text-left 
                 overflow-hidden shadow-xl transform transition-all sm:my-8 
-                sm:align-middle sm:max-w-lg sm:w-full">
+                sm:align-middle w-full sm:max-w-lg">
 
       <!-- Modal Content goes here -->
       <div class="flex-col text-center p-4">
-        <p class="font-bold">Hello from Modal</p>
+        <p class="font-bold text-xl">@Title</p>
         <br/>
-        <button class="p-2 px-4 bg-red-800 text-white rounded" @onclick='_ => { Hidden = "hidden"; }'>Hide Modal</button>
+        <input type="text" 
+                class="p-2 border-2 rounded w-5/6 text-center" 
+                @bind="Value" @bind:event="oninput"
+                @onkeypress="HandleInputKeyPress" />
+        <br/><br/>
+        <button class="app-btn-green" @onclick="SubmitValue">@SubmitButtonText</button>
+        <button class="app-btn" @onclick='_ => Hidden = "hidden"'>Cancel</button>
       </div>
 
     </div>
@@ -21,5 +27,44 @@
 </div>
 
 @code {
-    private string Hidden { get; set; } = "";
+    [Parameter]
+    public string Title { get; set; } = "No Modal Title";
+
+    [Parameter]
+    public string DefaultValue { get; set; } = "No Default Value";
+
+    [Parameter]
+    public string SubmitButtonText { get; set; } = "Done";
+
+    [Parameter]
+    public EventCallback<string> SubmitCallback { get; set; }
+
+    private string Value { get; set; }
+
+    private string Hidden { get; set; } = "hidden";
+
+    public void Show()
+    {
+        Hidden = "";
+        Value = DefaultValue;
+        StateHasChanged();
+    }
+
+    private void SubmitValue()
+    {
+        Hidden = "hidden";
+        StateHasChanged();
+        if (SubmitCallback.HasDelegate)
+        {
+            SubmitCallback.InvokeAsync(Value);
+        }
+    }
+
+    private void HandleInputKeyPress(KeyboardEventArgs eventArgs)
+    {
+        if (string.Compare(eventArgs.Key, "Enter", StringComparison.OrdinalIgnoreCase) == 0)
+        {
+            SubmitValue();
+        }
+    }
 }
