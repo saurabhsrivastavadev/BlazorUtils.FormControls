@@ -1,0 +1,59 @@
+﻿<div class="fixed z-8 inset-0 overflow-y-auto @Hidden">
+  <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+    <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
+
+    <!-- For centering the modal dialog -->
+    <span class="hidden sm:inline-block sm:align-middle sm:h-screen"></span>
+
+    <div class="inline-block align-bottom bg-white rounded-lg text-left 
+                overflow-hidden shadow-xl transform transition-all sm:my-8 
+                sm:align-middle w-full sm:max-w-lg">
+
+      <!-- Modal Content goes here -->
+      <div class="flex-col text-center p-4">
+        <p class="font-bold text-xl">@Title</p>
+        <br/>
+        <button class="app-btn-green" @onclick="_ => SubmitValue(true)">@AcceptButtonText</button>
+        <button class="app-btn" @onclick='_ => SubmitValue(false)'>@DenyButtonText</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+@code {
+    [Parameter]
+    public string Title { get; set; } = "No Modal Title";
+
+    [Parameter]
+    public string AcceptButtonText { get; set; } = "Accept";
+
+    [Parameter]
+    public string DenyButtonText { get; set; } = "Cancel";
+
+    /// <summary>
+    /// Callback to indicate if user accepted or denied, arg true if accepted.
+    /// </summary>
+    [Parameter]
+    public EventCallback<bool> SubmitCallback { get; set; }
+
+    private string Value { get; set; }
+
+    private string Hidden { get; set; } = "hidden";
+
+    public void Show()
+    {
+        Hidden = "";
+        StateHasChanged();
+    }
+
+    private async Task SubmitValue(bool consent)
+    {
+        Hidden = "hidden";
+        StateHasChanged();
+        if (SubmitCallback.HasDelegate)
+        {
+            await SubmitCallback.InvokeAsync(consent);
+        }
+    }
+}
