@@ -1,0 +1,56 @@
+﻿<div class="fixed z-8 inset-0 overflow-y-auto @Hidden">
+  <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+    <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
+
+    <!-- For centering the modal dialog -->
+    <span class="hidden sm:inline-block sm:align-middle sm:h-screen"></span>
+
+    <div class="inline-block align-bottom bg-white rounded-lg text-left 
+                overflow-hidden shadow-xl transform transition-all sm:my-8 
+                sm:align-middle w-full sm:max-w-lg">
+
+      <!-- Modal Content goes here -->
+      <div class="flex-col text-center p-4">
+        <p class="font-bold text-xl">@Title</p>
+        <br/>
+        <button class="app-btn" @onclick="Okay">Okay</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+@code {
+    [Parameter]
+    public string Title { get; set; } = "No Modal Title";
+
+    /// <summary>
+    /// Callback triggered when the alert is closed by user.
+    /// </summary>
+    [Parameter]
+    public EventCallback OnClosedCallback { get; set; }
+
+    private string Hidden { get; set; } = "hidden";
+
+    public void Show()
+    {
+        Hidden = "";
+        StateHasChanged();
+    }
+    public void Show(string message)
+    {
+        Title = message;
+        Show();
+    }
+
+    private async Task Okay()
+    {
+        Hidden = "hidden";
+        StateHasChanged();
+
+        if (OnClosedCallback.HasDelegate)
+        {
+            await OnClosedCallback.InvokeAsync();
+        }
+    }
+}
