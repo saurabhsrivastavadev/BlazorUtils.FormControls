@@ -28,12 +28,11 @@
     <div>
         @if (CurrentValue.Length > 1)
         {
-            <div>
+            <div class="pt-2">
                 @foreach (var suggestion in _matchingSuggestions)
                 {
-                    <div class="alert alert-success"
-                 style="cursor: pointer;"
-                 @onclick="_ => {
+                    <div class="flex justify-center space-x-1 p-1 cursor-pointer"
+                             @onclick="_ => {
                                        if (!_selectedValues.Contains(suggestion))
                                        {
                                            _selectedValues.Add(suggestion);
@@ -43,15 +42,22 @@
                                            _selectedValues.Remove(suggestion);
                                        }
                                    }">
-                        <i class="@(_selectedValues.Contains(suggestion) ? "oi oi-check mr-2" : "")"></i>
-                        @suggestion
+                        <div>@suggestion</div>
+                        @if (_selectedValues.Contains(suggestion))
+                        {
+                            <svg xmlns="http://www.w3.org/2000/svg" 
+                                 class="h-4 w-4 text-red-800 font-bold self-center" 
+                                 fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        }
                     </div>
                 }
             </div>
         }
         else if (Suggestions != null && Suggestions.Count > 0)
         {
-            <div class="mt-2 font-weight-bold">
+            <div class="mt-2 font-bold">
                 Enter atleast 2 characters to start search..
             </div>
         }
