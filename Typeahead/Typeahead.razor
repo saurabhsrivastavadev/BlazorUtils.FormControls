@@ -1,50 +1,39 @@
-﻿<div>
-    @* List of selected values *@
-    @if (_selectedValues.Count > 0)
-    {
-        <div class="badge">
-            @_selectedValues.Count selected value/s. Click any value to remove.
-        </div>
-    }
-    <div class="mb-2" style="cursor:pointer;">
+﻿@using Microsoft.Extensions.Logging
+@using System.Timers;
+
+<div class="bg-gray-100 p-4 rounded-xl">
+    <div class="flex flex-wrap justify-center mb-2">
         @foreach (var value in _selectedValues)
         {
-            <div class="badge bg-info"
-                 @onclick="_ => _selectedValues.Remove(value)">
-                @value
+            <div class="flex bg-green-100 m-2 p-2 rounded cursor-pointer space-x-2 border-2 border-gray-500"
+             @onclick="_ => _selectedValues.Remove(value)">
+                <div>@value</div>
+                <svg xmlns="http://www.w3.org/2000/svg" 
+                     class="h-4 w-4 text-red-800 font-bold self-center" 
+                     fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
             </div>
         }
     </div>
-    @* Submit Button *@
-    @if (_selectedValues.Count > 0)
-    {
-        <div class="mb-2">
-            <button class="btn btn-secondary btn-sm"
-                    @onclick="SubmitSelectedValues">
-                @SubmitButtonText
-            </button>
-        </div>
-    }
-    @* Text input for the value *@
-    <input class="form-control"
+
+    <input class="text-center border-2 border-gray-600 w-full rounded p-2"
            type="text"
            placeholder="@Placeholder"
            @onkeyup="HandleKeyUp"
            @bind="CurrentValue"
            @bind:event="oninput" />
+
     @* Suggest values matching above text input *@
     <div>
         @if (CurrentValue.Length > 1)
         {
-            <div class="mt-2 mb-2 font-weight-bold">
-                @(_matchingSuggestions.Count) matches to your text. Click to select.
-            </div>
             <div>
                 @foreach (var suggestion in _matchingSuggestions)
                 {
                     <div class="alert alert-success"
-                         style="cursor: pointer;"
-                         @onclick="_ => {
+                 style="cursor: pointer;"
+                 @onclick="_ => {
                                        if (!_selectedValues.Contains(suggestion))
                                        {
                                            _selectedValues.Add(suggestion);
@@ -60,7 +49,7 @@
                 }
             </div>
         }
-        else
+        else if (Suggestions != null && Suggestions.Count > 0)
         {
             <div class="mt-2 font-weight-bold">
                 Enter atleast 2 characters to start search..
@@ -68,3 +57,95 @@
         }
     </div>
 </div>
+
+@code {
+
+    [Inject]
+    private ILogger<Typeahead> Logger { get; set; }
+
+    [Parameter]
+    public ISet<string> Suggestions { get; set; }
+
+    [Parameter]
+    public EventCallback<ISet<string>> SuggestionsChanged { get; set; }
+
+    [Parameter]
+    public bool AllowOnlySuggestedValues { get; set; } = false;
+
+    [Parameter]
+    public string Placeholder { get; set; } = string.Empty;
+
+    [Parameter]
+    public string SubmitButtonText { get; set; } = "Submit the selected values";
+
+    [Parameter]
+    public EventCallback<ISet<string>> SubmitCallback { get; set; }
+
+    [Parameter]
+    public bool ClearSelectionOnSubmit { get; set; } = true;
+
+    private string CurrentValue { get; set; } = string.Empty;
+
+    private string _lastValue = string.Empty;
+    private ISet<string> _matchingSuggestions = new HashSet<string>();
+    private Timer _debounceTimer = new Timer(400);
+    private ISet<string> _selectedValues = new HashSet<string>();
+
+    protected override Task OnInitializedAsync()
+    {
+        _debounceTimer.AutoReset = false;
+        _debounceTimer.Elapsed += DebounceTimerCb;
+
+        return base.OnInitializedAsync();
+    }
+
+    protected override Task OnParametersSetAsync()
+    {
+        if (AllowOnlySuggestedValues && (Suggestions == null || Suggestions.Count == 0))
+        {
+            Logger.LogInformation("No suggestions in the typeahead component.");
+        }
+
+        return base.OnParametersSetAsync();
+    }
+
+    private void HandleKeyUp(KeyboardEventArgs args)
+    {
+        _debounceTimer.Stop();
+        _debounceTimer.Start();
+
+        if (args.Key == "Enter" && CurrentValue.Length > 0 && !AllowOnlySuggestedValues)
+        {
+            _selectedValues.Add(CurrentValue);
+        }
+    }
+
+    private void DebounceTimerCb(object sender, ElapsedEventArgs args)
+    {
+        if (CurrentValue.Length > 1 && CurrentValue != _lastValue)
+        {
+            _matchingSuggestions.Clear();
+            _matchingSuggestions.UnionWith(Suggestions.Where(
+                s => s.Contains(CurrentValue, StringComparison.OrdinalIgnoreCase)));
+            StateHasChanged();
+        }
+        else if (CurrentValue != _lastValue)
+        {
+            _matchingSuggestions.Clear();
+            StateHasChanged();
+        }
+
+        _lastValue = CurrentValue;
+    }
+
+    private void SubmitSelectedValues()
+    {
+        SubmitCallback.InvokeAsync(_selectedValues);
+
+        if (ClearSelectionOnSubmit)
+        {
+            _selectedValues.Clear();
+            CurrentValue = string.Empty;
+        }
+    }
+}
