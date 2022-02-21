@@ -30,7 +30,10 @@
         {
             <ul class="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-56
                         rounded-md py-1 text-base ring-1 ring-black ring-opacity-5
-                        overflow-auto focus:outline-none sm:text-sm border-2 border-green-800">
+                        overflow-auto focus:outline-none sm:text-sm border-2 border-green-800"
+                tabindex="-1" role="listbox"
+                @onfocusin='_ => Console.WriteLine("focusin")'
+                @onfocusout='_ => Console.WriteLine("focusout")'>
 
                 @foreach (var suggestion in _matchingSuggestions)
                 {
