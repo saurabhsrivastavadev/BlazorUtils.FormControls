@@ -2,38 +2,24 @@
 @using System.Timers;
 
 <div class="bg-gray-100 p-4 rounded-xl">
-    <div class="flex flex-wrap justify-center mb-2">
-        @foreach (var value in _selectedValues)
-        {
-            <div class="flex bg-green-100 m-2 p-2 rounded cursor-pointer space-x-2 border-2 border-gray-500"
-             @onclick="_ => _selectedValues.Remove(value)">
-                <div>@value</div>
-                <svg xmlns="http://www.w3.org/2000/svg"
-                 class="h-4 w-4 text-red-800 font-bold self-center"
-                 fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-            </div>
-        }
-    </div>
-
     <input class="text-center border-2 border-gray-600 w-full rounded p-2"
            type="text"
            placeholder="@Placeholder"
            @onkeyup="HandleKeyUp"
+           @onfocus="_ => _showSuggestions = true"
            @bind="CurrentValue"
            @bind:event="oninput" />
 
     @* Suggest values matching above text input *@
     <div class="relative">
-        @if (CurrentValue.Length > 1)
+        @if (CurrentValue.Length >= MinCharForSuggestions && _showSuggestions)
         {
             <ul class="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-56
                         rounded-md py-1 text-base ring-1 ring-black ring-opacity-5
                         overflow-auto focus:outline-none sm:text-sm border-2 border-green-800"
                 tabindex="-1" role="listbox"
-                @onfocusin='_ => Console.WriteLine("focusin")'
-                @onfocusout='_ => Console.WriteLine("focusout")'>
+                @onfocusin='_ => _showSuggestions = true'
+                @onfocusout='_ => _showSuggestions = false'>
 
                 @foreach (var suggestion in _matchingSuggestions)
                 {
@@ -64,13 +50,32 @@
                 }
             </ul>
         }
-        else if (Suggestions != null && Suggestions.Count > 0)
+        else if (Suggestions != null && Suggestions.Count > 0 && CurrentValue.Length < MinCharForSuggestions)
         {
             <div class="mt-2 font-bold">
-                Enter atleast 2 characters to start search..
+                Enter atleast @MinCharForSuggestions characters to start search..
             </div>
         }
     </div>
+
+    <div class="flex flex-wrap justify-center">
+        @if (ShowSelectedSuggestions)
+        {
+            @foreach (var value in _selectedValues)
+            {
+                <div class="flex bg-green-100 m-2 mb-0 p-2 rounded cursor-pointer space-x-2 border-2 border-gray-500"
+                 @onclick="_ => _selectedValues.Remove(value)">
+                    <div>@value</div>
+                    <svg xmlns="http://www.w3.org/2000/svg"
+                     class="h-4 w-4 text-red-800 font-bold self-center"
+                     fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </div>
+            }
+        }
+    </div>
+
 </div>
 
 @code {
@@ -80,6 +85,12 @@
 
     [Parameter]
     public ISet<string> Suggestions { get; set; }
+
+    [Parameter]
+    public bool ShowSelectedSuggestions { get; set; } = true;
+
+    [Parameter]
+    public int MinCharForSuggestions { get; set; } = 2;
 
     [Parameter]
     public EventCallback<ISet<string>> SuggestionsChanged { get; set; }
@@ -106,6 +117,8 @@
     private Timer _debounceTimer = new Timer(400);
     private ISet<string> _selectedValues = new HashSet<string>();
 
+    private bool _showSuggestions;
+
     protected override Task OnInitializedAsync()
     {
         _debounceTimer.AutoReset = false;
@@ -129,15 +142,23 @@
         _debounceTimer.Stop();
         _debounceTimer.Start();
 
-        if (args.Key == "Enter" && CurrentValue.Length > 0 && !AllowOnlySuggestedValues)
+        if (args.Key == "Enter" && CurrentValue.Length >= MinCharForSuggestions && !AllowOnlySuggestedValues)
         {
             _selectedValues.Add(CurrentValue);
+        }
+        if (CurrentValue.Length > 1)
+        {
+            _showSuggestions = true;
+        }
+        if (args.Key == "Escape")
+        {
+            _showSuggestions = false;
         }
     }
 
     private void DebounceTimerCb(object sender, ElapsedEventArgs args)
     {
-        if (CurrentValue.Length > 1 && CurrentValue != _lastValue)
+        if (CurrentValue.Length >= MinCharForSuggestions && CurrentValue != _lastValue)
         {
             _matchingSuggestions.Clear();
             _matchingSuggestions.UnionWith(Suggestions.Where(
