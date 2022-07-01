@@ -22,19 +22,46 @@
         }
     </div>
 
-    <input class="text-center border-2 border-gray-600 w-full rounded p-2"
-           type="text"
-           placeholder="@Placeholder"
-           @onkeyup="HandleKeyUp"
-           @onfocusin='_ => _focusInInput = true'
-           @onfocusout='async _ => {await Task.Delay(50); _focusInInput = false;}'
-           @bind="CurrentValue"
-           @bind:event="oninput" />
+    <div class="flex border-2 border-gray-400 rounded items-center">
+
+        <input class="text-center w-full rounded p-2 focus:border-none"
+            type="text"
+            placeholder="@Placeholder"
+            @onkeyup="HandleKeyUp"
+            @onfocusin='_ => _focusInInput = true'
+            @onfocusout='async _ => {await Task.Delay(50); _focusInInput = false;}'
+            @bind="CurrentValue"
+            @bind:event="oninput" />
+
+        <div tabindex="-1"             
+            @onfocusin='_ => _focusInArrow = true'
+            @onfocusout='async _ => {await Task.Delay(50); _focusInArrow = false;}'>
+
+            @if (!ShowSuggestions)
+            {
+                <!-- Down Arrow -->
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mx-2 cursor-pointer" 
+                     viewBox="0 0 20 20" fill="currentColor"
+                     @onclick='_ => { ShowSuggestions = true; _matchingSuggestions.UnionWith(Suggestions); }'>
+                    <path fill-rule="evenodd" d="M15.707 4.293a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-5-5a1 1 0 011.414-1.414L10 8.586l4.293-4.293a1 1 0 011.414 0zm0 6a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-5-5a1 1 0 111.414-1.414L10 14.586l4.293-4.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                </svg>
+            } 
+            else
+            {
+                <!-- Up Arrow -->
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mx-2 cursor-pointer" 
+                     viewBox="0 0 20 20" fill="currentColor"
+                     @onclick='_ => { ShowSuggestions = false; }'>
+                    <path fill-rule="evenodd" d="M4.293 15.707a1 1 0 010-1.414l5-5a1 1 0 011.414 0l5 5a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414 0zm0-6a1 1 0 010-1.414l5-5a1 1 0 011.414 0l5 5a1 1 0 01-1.414 1.414L10 5.414 5.707 9.707a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                </svg>
+            }
+        </div>
+
+    </div>
 
     @* Suggest values matching above text input *@
     <div class="relative">
-        @if (CurrentValue.Length >= MinCharForSuggestions && 
-                ShowSuggestions && _matchingSuggestions.Count > 0)
+        @if (ShowSuggestions && _matchingSuggestions.Count > 0)
         {
             <ul class="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-56
                         rounded-md py-1 text-base ring-1 ring-black ring-opacity-5
@@ -114,13 +141,13 @@
 
     private bool _focusInInput = false;
     private bool _focusInSuggestions = false;
-    private bool _showSuggestions = true;
+    private bool _focusInArrow = false;
+    private bool _showSuggestions = false;
     private bool ShowSuggestions
     {
         get
         {
-            Console.WriteLine($"_showSuggestions {_showSuggestions}, focusInInput {_focusInInput}, _focusInSuggestions {_focusInSuggestions}");
-            return _showSuggestions && (_focusInInput || _focusInSuggestions);
+            return _showSuggestions && (_focusInInput || _focusInSuggestions || _focusInArrow);
         }
 
         set
