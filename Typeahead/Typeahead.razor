@@ -2,31 +2,53 @@
 @using System.Timers;
 
 <div class="bg-gray-100 p-4 rounded-xl">
+
+    <div class="flex flex-wrap justify-center mb-2">
+        @if (ShowSelectedSuggestions)
+        {
+            @foreach (var value in _selectedValues)
+            {
+                <div class="flex bg-green-100 m-2 mb-0 p-2 rounded cursor-pointer 
+                                space-x-2 border-2 border-gray-500 text-xs"
+                 @onclick="_ => _selectedValues.Remove(value)">
+                    <p>@value</p>
+                    <svg xmlns="http://www.w3.org/2000/svg"
+                     class="h-4 w-4 text-red-800 font-bold self-center"
+                     fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </div>
+            }
+        }
+    </div>
+
     <input class="text-center border-2 border-gray-600 w-full rounded p-2"
            type="text"
            placeholder="@Placeholder"
            @onkeyup="HandleKeyUp"
-           @onfocus="_ => _showSuggestions = true"
+           @onfocusin='_ => _focusInInput = true'
+           @onfocusout='async _ => {await Task.Delay(50); _focusInInput = false;}'
            @bind="CurrentValue"
            @bind:event="oninput" />
 
     @* Suggest values matching above text input *@
     <div class="relative">
-        @if (CurrentValue.Length >= MinCharForSuggestions && _showSuggestions)
+        @if (CurrentValue.Length >= MinCharForSuggestions && 
+                ShowSuggestions && _matchingSuggestions.Count > 0)
         {
             <ul class="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-56
                         rounded-md py-1 text-base ring-1 ring-black ring-opacity-5
                         overflow-auto focus:outline-none sm:text-sm border-2 border-green-800"
                 tabindex="-1" role="listbox"
-                @onfocusin='_ => _showSuggestions = true'
-                @onfocusout='_ => _showSuggestions = false'>
+                @onfocusin='_ => _focusInSuggestions = true'
+                @onfocusout='_ => _focusInSuggestions = false'>
 
                 @foreach (var suggestion in _matchingSuggestions)
                 {
                     <li class="text-gray-900 cursor-default select-none relative py-2 pl-3 pr-9">
 
                         <div class="flex justify-center space-x-1 p-1 cursor-pointer"
-                                @onclick="_ => {
+                                @onclick='_ => {
                                     if (!_selectedValues.Contains(suggestion))
                                     {
                                         _selectedValues.Add(suggestion);
@@ -35,7 +57,7 @@
                                     {
                                         _selectedValues.Remove(suggestion);
                                     }
-                                }">
+                                }'>
                             <div>@suggestion</div>
                             @if (_selectedValues.Contains(suggestion))
                             {
@@ -50,31 +72,9 @@
                 }
             </ul>
         }
-        else if (Suggestions != null && Suggestions.Count > 0 && CurrentValue.Length < MinCharForSuggestions)
-        {
-            <div class="mt-2 font-bold">
-                Enter atleast @MinCharForSuggestions characters to start search..
-            </div>
-        }
     </div>
 
-    <div class="flex flex-wrap justify-center">
-        @if (ShowSelectedSuggestions)
-        {
-            @foreach (var value in _selectedValues)
-            {
-                <div class="flex bg-green-100 m-2 mb-0 p-2 rounded cursor-pointer space-x-2 border-2 border-gray-500"
-                 @onclick="_ => _selectedValues.Remove(value)">
-                    <div>@value</div>
-                    <svg xmlns="http://www.w3.org/2000/svg"
-                     class="h-4 w-4 text-red-800 font-bold self-center"
-                     fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </div>
-            }
-        }
-    </div>
+    <button class="app-btn mt-2" @onclick="SubmitSelectedValues">@SubmitButtonText</button>
 
 </div>
 
@@ -112,12 +112,27 @@
 
     private string CurrentValue { get; set; } = string.Empty;
 
+    private bool _focusInInput = false;
+    private bool _focusInSuggestions = false;
+    private bool _showSuggestions = true;
+    private bool ShowSuggestions
+    {
+        get
+        {
+            Console.WriteLine($"_showSuggestions {_showSuggestions}, focusInInput {_focusInInput}, _focusInSuggestions {_focusInSuggestions}");
+            return _showSuggestions && (_focusInInput || _focusInSuggestions);
+        }
+
+        set
+        {
+            _showSuggestions = value;
+        }
+    }
+
     private string _lastValue = string.Empty;
     private ISet<string> _matchingSuggestions = new HashSet<string>();
     private Timer _debounceTimer = new Timer(400);
     private ISet<string> _selectedValues = new HashSet<string>();
-
-    private bool _showSuggestions;
 
     protected override Task OnInitializedAsync()
     {
@@ -134,6 +149,11 @@
             Logger.LogInformation("No suggestions in the typeahead component.");
         }
 
+        if (Placeholder == string.Empty && Suggestions != null && Suggestions.Count > 0)
+        {
+            Placeholder = $"Type to select from {Suggestions.Count} values..";
+        }
+
         return base.OnParametersSetAsync();
     }
 
@@ -148,11 +168,11 @@
         }
         if (CurrentValue.Length > 1)
         {
-            _showSuggestions = true;
+            ShowSuggestions = true;
         }
         if (args.Key == "Escape")
         {
-            _showSuggestions = false;
+            ShowSuggestions = false;
         }
     }
 
