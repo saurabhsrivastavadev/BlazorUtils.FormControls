@@ -74,7 +74,8 @@
                 {
                     <li class="text-gray-900 cursor-default select-none relative py-2 pl-3 pr-9">
 
-                        <div class="flex justify-center space-x-1 p-1 cursor-pointer"
+                        <div class='flex justify-center space-x-1 p-1 cursor-pointer border-2
+                                    @(_selectedValues.Contains(suggestion)? "bg-green-100": "")'
                                 @onclick='_ => {
                                     if (!_selectedValues.Contains(suggestion))
                                     {
@@ -178,7 +179,7 @@
 
         if (Placeholder == string.Empty && Suggestions != null && Suggestions.Count > 0)
         {
-            Placeholder = $"Type to select from {Suggestions.Count} values..";
+            Placeholder = $"Type to filter from {Suggestions.Count} values..";
         }
 
         return base.OnParametersSetAsync();
