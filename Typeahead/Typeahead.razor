@@ -79,7 +79,7 @@
 
     @* Suggest values matching above text input *@
     <div class="relative">
-        @if (ShowSuggestions && _matchingSuggestions.Count > 0)
+        @if (ShowSuggestions)
         {
             <ul class="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-56
                         rounded-md py-1 text-base ring-1 ring-black ring-opacity-5
@@ -87,6 +87,36 @@
                 tabindex="-1" role="listbox"
                 @onfocusin='_ => _focusInSuggestions = true'
                 @onfocusout='_ => _focusInSuggestions = false'>
+
+                @if (CurrentValue?.Length > 0 && Suggestions?.Contains(CurrentValue) == false)
+                {
+                        <li class="text-gray-900 cursor-default select-none relative py-1 pl-3 pr-9">
+
+                        <div class='flex justify-center space-x-1 p-1 cursor-pointer border-2
+                                    @(_newValues.Contains(CurrentValue)? "bg-green-100": "")'
+                                @onclick='_ => {
+                                    if (!_newValues.Contains(CurrentValue))
+                                    {
+                                        _newValues.Add(CurrentValue);
+                                    }
+                                    else
+                                    {
+                                        _newValues.Remove(CurrentValue);
+                                    }
+                                }'>
+                            <div>Add new value [@CurrentValue]</div>
+                            @if (_newValues.Contains(CurrentValue))
+                            {
+                                <svg xmlns="http://www.w3.org/2000/svg"
+                                        class="h-4 w-4 text-red-800 font-bold self-center"
+                                        fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" 
+                                          stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            }
+                        </div>
+                    </li>
+                }
 
                 @foreach (var suggestion in _matchingSuggestions)
                 {
@@ -228,11 +258,12 @@
                 _newValues.Add(CurrentValue);
             }
         }
-        if (CurrentValue.Length >= MinCharForSuggestions)
+
+        if (CurrentValue.Length > 0)
         {
             ShowSuggestions = true;
         }
-        if (args.Key == "Escape")
+        if (args.Key == "Escape" || CurrentValue.Length == 0)
         {
             ShowSuggestions = false;
         }
