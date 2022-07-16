@@ -15,7 +15,22 @@
                     <svg xmlns="http://www.w3.org/2000/svg"
                      class="h-4 w-4 text-red-800 font-bold self-center"
                      fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </div>
+            }
+            @foreach (var value in _newValues)
+            {
+                <div class="flex bg-green-100 m-2 mb-0 p-2 rounded cursor-pointer 
+                                space-x-2 border-2 border-gray-500 text-xs"
+                 @onclick="_ => _newValues.Remove(value)">
+                    <p>@value</p>
+                    <svg xmlns="http://www.w3.org/2000/svg"
+                     class="h-4 w-4 text-red-800 font-bold self-center"
+                     fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                d="M6 18L18 6M6 6l12 12" />
                     </svg>
                 </div>
             }
@@ -42,7 +57,10 @@
                 <!-- Down Arrow -->
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mx-2 cursor-pointer" 
                      viewBox="0 0 20 20" fill="currentColor"
-                     @onclick='_ => { ShowSuggestions = true; _matchingSuggestions.UnionWith(Suggestions); }'>
+                     @onclick='_ => { 
+                         ShowSuggestions = true; 
+                         _matchingSuggestions.UnionWith(Suggestions);
+                     }'>
                     <path fill-rule="evenodd" d="M15.707 4.293a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-5-5a1 1 0 011.414-1.414L10 8.586l4.293-4.293a1 1 0 011.414 0zm0 6a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-5-5a1 1 0 111.414-1.414L10 14.586l4.293-4.293a1 1 0 011.414 0z" clip-rule="evenodd" />
                 </svg>
             } 
@@ -72,7 +90,7 @@
 
                 @foreach (var suggestion in _matchingSuggestions)
                 {
-                    <li class="text-gray-900 cursor-default select-none relative py-2 pl-3 pr-9">
+                    <li class="text-gray-900 cursor-default select-none relative py-1 pl-3 pr-9">
 
                         <div class='flex justify-center space-x-1 p-1 cursor-pointer border-2
                                     @(_selectedValues.Contains(suggestion)? "bg-green-100": "")'
@@ -92,7 +110,8 @@
                                 <svg xmlns="http://www.w3.org/2000/svg"
                                         class="h-4 w-4 text-red-800 font-bold self-center"
                                         fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" 
+                                          stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                                 </svg>
                             }
                         </div>
@@ -132,8 +151,14 @@
     [Parameter]
     public string SubmitButtonText { get; set; } = "Submit the selected values";
 
+    /// <summary>
+    /// Submit callback will return values picked from provided suggestions,
+    /// and new values added by user which were not in the suggestions.
+    /// - Tuple.Item1 Parameter: Set of values user selected from provided suggestions.
+    /// - Tuple.Item2 Parameter: Set of new values added by user.
+    /// </summary>
     [Parameter]
-    public EventCallback<ISet<string>> SubmitCallback { get; set; }
+    public EventCallback<Tuple<ISet<string>, ISet<string>>> SubmitCallback { get; set; }
 
     [Parameter]
     public bool ClearSelectionOnSubmit { get; set; } = true;
@@ -160,7 +185,9 @@
     private string _lastValue = string.Empty;
     private ISet<string> _matchingSuggestions = new HashSet<string>();
     private Timer _debounceTimer = new Timer(400);
+
     private ISet<string> _selectedValues = new HashSet<string>();
+    private ISet<string> _newValues = new HashSet<string>();
 
     protected override Task OnInitializedAsync()
     {
@@ -190,11 +217,18 @@
         _debounceTimer.Stop();
         _debounceTimer.Start();
 
-        if (args.Key == "Enter" && CurrentValue.Length >= MinCharForSuggestions && !AllowOnlySuggestedValues)
+        if (args.Key == "Enter")
         {
-            _selectedValues.Add(CurrentValue);
+            if (Suggestions?.Contains(CurrentValue) == true)
+            {
+                _selectedValues.Add(CurrentValue);
+            }
+            else
+            {   
+                _newValues.Add(CurrentValue);
+            }
         }
-        if (CurrentValue.Length > 1)
+        if (CurrentValue.Length >= MinCharForSuggestions)
         {
             ShowSuggestions = true;
         }
@@ -224,11 +258,12 @@
 
     private void SubmitSelectedValues()
     {
-        SubmitCallback.InvokeAsync(_selectedValues);
+        SubmitCallback.InvokeAsync(Tuple.Create(_selectedValues, _newValues));
 
         if (ClearSelectionOnSubmit)
         {
             _selectedValues.Clear();
+            _newValues.Clear();
             CurrentValue = string.Empty;
         }
     }
