@@ -182,13 +182,21 @@
     public string SubmitButtonText { get; set; } = "Submit the selected values";
 
     /// <summary>
+    /// Set of values sent back to the client in the SubmitCallback.
+    /// </summary>
+    public class SubmittedValues
+    {
+        public ISet<string> ValuesSelectedFromSuggestions;
+        public ISet<string> ValuesAddedByUser;
+    }
+    /// <summary>
     /// Submit callback will return values picked from provided suggestions,
     /// and new values added by user which were not in the suggestions.
     /// - Tuple.Item1 Parameter: Set of values user selected from provided suggestions.
     /// - Tuple.Item2 Parameter: Set of new values added by user.
     /// </summary>
     [Parameter]
-    public EventCallback<Tuple<ISet<string>, ISet<string>>> SubmitCallback { get; set; }
+    public EventCallback<SubmittedValues> SubmitCallback { get; set; }
 
     [Parameter]
     public bool ClearSelectionOnSubmit { get; set; } = true;
@@ -289,7 +297,11 @@
 
     private void SubmitSelectedValues()
     {
-        SubmitCallback.InvokeAsync(Tuple.Create(_selectedValues, _newValues));
+        SubmitCallback.InvokeAsync(new SubmittedValues
+            {
+                ValuesSelectedFromSuggestions = _selectedValues,
+                ValuesAddedByUser = _newValues
+            });
 
         if (ClearSelectionOnSubmit)
         {
