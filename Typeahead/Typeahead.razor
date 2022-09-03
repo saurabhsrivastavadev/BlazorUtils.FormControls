@@ -299,8 +299,8 @@
     {
         SubmitCallback.InvokeAsync(new SubmittedValues
             {
-                ValuesSelectedFromSuggestions = _selectedValues,
-                ValuesAddedByUser = _newValues
+                ValuesSelectedFromSuggestions = new HashSet<string>(_selectedValues),
+                ValuesAddedByUser = new HashSet<string>(_newValues)
             });
 
         if (ClearSelectionOnSubmit)
