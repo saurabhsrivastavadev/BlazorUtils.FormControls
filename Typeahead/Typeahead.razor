@@ -163,14 +163,16 @@
     [Parameter]
     public ISet<string> Suggestions { get; set; }
 
+    // 2-way binding not required for Suggestions, remove below SuggestionsChanged later
+    // https://docs.microsoft.com/en-us/aspnet/core/blazor/components/data-binding?view=aspnetcore-6.0#binding-with-component-parameters
+    [Parameter]
+    public EventCallback<ISet<string>> SuggestionsChanged { get; set; }
+
     [Parameter]
     public bool ShowSelectedSuggestions { get; set; } = true;
 
     [Parameter]
     public int MinCharForSuggestions { get; set; } = 2;
-
-    [Parameter]
-    public EventCallback<ISet<string>> SuggestionsChanged { get; set; }
 
     [Parameter]
     public bool AllowOnlySuggestedValues { get; set; } = false;
