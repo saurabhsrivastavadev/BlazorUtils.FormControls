@@ -1,9 +1,10 @@
-﻿@using Microsoft.Extensions.Logging
-@using System.Timers;
-@using Typeahead;
+﻿@using BlazorUtils.FormControls.Validation;
+@using Microsoft.Extensions.Logging
+@using System.Timers
+@using Typeahead
 @using System.Web
 
-@inject ILogger<Typeahead> Logger
+@implements IFormControl<string>
 
 <div class="bg-gray-100 p-4 rounded-xl">
 
@@ -27,7 +28,7 @@
 
         @if (!string.IsNullOrWhiteSpace(DescriptionPopupText))
         {
-            <div tabindex="-1" 
+            <div tabindex="-1"
                 @onmouseover="_ => ShowDescriptionPopup = true"
                 @onmouseout="_ => ShowDescriptionPopup = false">
 
@@ -60,6 +61,9 @@
 @code {
 
     [Parameter]
+    public List<IValidator<string>> Validators { get; set; }
+
+    [Parameter]
     public string Placeholder { get; set; } = string.Empty;
 
     [Parameter]
@@ -76,7 +80,6 @@
     private bool ShowDescriptionPopup { get; set; }
 
     private bool _focusInInput = false;
-
     private string _lastValue = string.Empty;
     private Timer _debounceTimer = new Timer(500);
 
@@ -101,5 +104,11 @@
         ValueChanged.InvokeAsync(Value);
 
         _lastValue = Value;
+    }
+
+    void IFormControl<string>.HandleValidationResults(
+        List<ValidationResult<string>> results)
+    {
+        // todo 
     }
 }
