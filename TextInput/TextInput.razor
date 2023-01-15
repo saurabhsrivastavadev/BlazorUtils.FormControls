@@ -81,7 +81,7 @@
 
     private bool _focusInInput = false;
     private string _lastValue = string.Empty;
-    private Timer _debounceTimer = new Timer(500);
+    private Timer _debounceTimer = new Timer(1000);
 
     protected override Task OnInitializedAsync()
     {
@@ -99,16 +99,20 @@
 
     private void DebounceTimerCb(object sender, ElapsedEventArgs args)
     {
-        // todo - run validations.
-
-        ValueChanged.InvokeAsync(Value);
-
+        (this as IFormControl<string>).RunValidations(Value);
         _lastValue = Value;
     }
 
     void IFormControl<string>.HandleValidationResults(
-        List<ValidationResult<string>> results)
+        List<ValidationResult<string>> results, bool allPassed)
     {
-        // todo 
+        if (allPassed)
+        {
+            ValueChanged.InvokeAsync(Value);
+        }
+        else
+        {
+            
+        }
     }
 }

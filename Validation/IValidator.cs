@@ -8,9 +8,9 @@ namespace BlazorUtils.FormControls.Validation
 {
     public enum ValidatorType
     {
-        TEXT_EMAIL,
-        TEXT_PHONE,
-        URL_YOUTUBE
+        EMAIL,
+        PHONE_NUMBER,
+        YOUTUBE_URL
     }
 
     public interface IValidator<T>
@@ -22,7 +22,9 @@ namespace BlazorUtils.FormControls.Validation
 
     public class ValidationResult<T>
     {
-        public IValidator<T> Validator { get; set; }
+        public ValidationResult(IValidator<T> validator) { Validator = validator; }
+
+        public IValidator<T> Validator { get; }   
 
         public bool Result { get; set; }
 
